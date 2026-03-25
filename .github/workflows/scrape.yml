@@ -1,0 +1,32 @@
+name: News Scraper Robot
+
+on:
+  schedule:
+    # 01:00 AM WIB = 18:00 UTC
+    - cron: '0 18 * * *'
+  workflow_dispatch: # Tombol rahasia untuk tes manual kapan saja
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Libraries
+        run: |
+          pip install httpx supabase resend python-dotenv
+
+      - name: Execute Scraper & Email
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
+          EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
+          PYTHONPATH: . 
+        run: python backend/jobs/scheduler_github.py
