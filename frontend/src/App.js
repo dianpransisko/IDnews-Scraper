@@ -1,84 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// --- BAGIAN INI JANGAN DIUBAH ---
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL || '', 
-  process.env.REACT_APP_SUPABASE_ANON_KEY || ''
-);
-
 function App() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [news, setNews] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [pesan, setPesan] = useState("Sedang memuat...");
 
   useEffect(() => {
-    // 1. LOGIKA IF/ELSE SEDERHANA (Halaman Depan)
-    const passwordInput = prompt("Masukkan Password untuk Melihat Berita:");
-    
+    // 1. Langsung munculkan password saat web dibuka
+    const passwordInput = window.prompt("Masukkan Password:");
+
     if (passwordInput === 'kopi2029') {
       setIsAuthorized(true);
-      fetchNews(); // Ambil berita
+      ambilData(); // Baru panggil database kalau password benar
     } else {
-      alert("Akses Ditolak! Password Salah.");
-      window.location.reload(); 
+      alert("Password Salah!");
+      window.location.reload();
     }
   }, []);
 
-  const fetchNews = async () => {
-    setLoading(true);
+  const ambilData = async () => {
+    // 2. Kita panggil Supabase DI DALAM fungsi ini saja supaya tidak bikin blank
+    const url = process.env.REACT_APP_SUPABASE_URL;
+    const key = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+      setPesan("⚠️ ERROR: Kunci API di Vercel belum benar. Cek nama REACT_APP_ nya.");
+      return;
+    }
+
     try {
-      const { data } = await supabase
+      const supabase = createClient(url, key);
+      const { data, error } = await supabase
         .from('scraped_data')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (error) throw error;
       setNews(data || []);
-    } catch (e) {
-      console.log("Gagal ambil data");
-    } finally {
-      setLoading(false);
+      setPesan(""); 
+    } catch (err) {
+      setPesan("Gagal koneksi ke database: " + err.message);
     }
   };
 
-  // JIKA BELUM LOGIN, TAMPILKAN HALAMAN KOSONG/LOADING
+  // Tampilan kalau password belum diisi (Biar tidak putih polos)
   if (!isAuthorized) {
     return (
       <div style={{ textAlign: 'center', marginTop: '100px', fontFamily: 'sans-serif' }}>
-        <h1>🔐 Website Terkunci</h1>
-        <p>Silakan masukkan password pada kotak yang muncul.</p>
+        <h2>🔐 Halaman Terkunci</h2>
+        <p>Silakan isi password pada kotak yang muncul.</p>
       </div>
     );
   }
 
-  // JIKA SUDAH LOGIN (IF AUTHORIZED), TAMPILKAN SEMUA BERITA
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f4f7f6', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-      <header style={{ marginBottom: '30px', borderBottom: '2px solid #ddd', paddingBottom: '10px' }}>
-        <h1 style={{ color: '#2d3436' }}>ID News Scraper - Privat</h1>
-        <button 
-          onClick={fetchNews} 
-          style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#00b894', color: 'white', border: 'none', borderRadius: '5px' }}
-        >
-          {loading ? 'Memperbarui...' : '🔄 Segarkan Berita'}
-        </button>
-      </header>
-
-      {/* Tampilan Kartu Berita */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+      <h1>ID News Scraper - Privat</h1>
+      <p style={{ color: 'red' }}>{pesan}</p>
+      <hr />
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
         {news.map((item) => (
-          <div key={item.id} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-            <small style={{ color: '#0984e3', fontWeight: 'bold' }}>{item.source}</small>
-            <h3 style={{ margin: '10px 0', fontSize: '18px' }}>{item.title}</h3>
-            <div style={{ marginTop: '15px' }}>
-              <a href={item.url} target="_blank" rel="noreferrer" style={{ color: '#0984e3', textDecoration: 'none', fontWeight: 'bold' }}>
-                Baca Selengkapnya 🔗
-              </a>
-            </div>
+          <div key={item.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
+            <h3 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>{item.title}</h3>
+            <a href={item.url} target="_blank" rel="noreferrer" style={{ color: 'blue', fontWeight: 'bold' }}>
+              Baca Berita 🔗
+            </a>
           </div>
         ))}
       </div>
 
-      {news.length === 0 && !loading && <p style={{ textAlign: 'center' }}>Tidak ada berita ditemukan.</p>}
+      {news.length === 0 && !pesan && <p>Database masih kosong...</p>}
     </div>
   );
 }
