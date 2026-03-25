@@ -46,7 +46,6 @@ function App() {
     return <div style={{ textAlign: 'center', marginTop: '100px', fontFamily: 'sans-serif' }}>Memeriksa Izin Akses...</div>;
   }
 
-  // TAMPILAN BERITA (Tidak saya ubah, tetap seperti keinginanmu)
   return (
     <div style={{ padding: '40px', backgroundColor: '#f4f7f6', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
