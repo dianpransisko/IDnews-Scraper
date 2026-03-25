@@ -1,74 +1,95 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { RefreshCw, ExternalLink, Database } from 'lucide-react';
 
-// --- CEK VARIABEL SEBELUM JALAN ---
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// --- KONFIGURASI SUPABASE (VERSI CRA) ---
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-// Jika variabel tidak ada, jangan panggil createClient dulu agar tidak blank
-let supabase = null;
-if (url && key) {
-  supabase = createClient(url, key);
-}
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 function App() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [news, setNews] = useState([]);
-  const [errorInfo, setErrorInfo] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // 1. Cek apakah kunci API sudah masuk
-    if (!url || !key) {
-      setErrorInfo("⚠️ ERROR: Kunci API Supabase belum terpasang di Vercel (Environment Variables).");
-      return;
-    }
-
-    // 2. Jalankan Password
-    const password = window.prompt("Masukkan Password:");
+    // 1. Munculkan Password
+    const password = prompt("Masukkan Password Akses:");
+    
     if (password === 'kopi2029') {
       setIsAuthorized(true);
       fetchNews();
-    } else if (password !== null) {
-      alert("Salah!");
+    } else {
+      alert("Password salah!");
       window.location.reload();
     }
   }, []);
 
   const fetchNews = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('scraped_data')
         .select('*')
         .order('created_at', { ascending: false });
+
       if (error) throw error;
       setNews(data || []);
-    } catch (err) {
-      setErrorInfo("Gagal ambil data: " + err.message);
+    } catch (error) {
+      console.error("Error:", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Jika ada Error Info, tampilkan ini (Biar tidak putih polos)
-  if (errorInfo) {
-    return <div style={{ padding: '20px', color: 'red', textAlign: 'center' }}>{errorInfo}</div>;
-  }
-
   if (!isAuthorized) {
-    return <div style={{ textAlign: 'center', marginTop: '100px' }}>🔐 Menunggu Password...</div>;
+    return <div style={{ textAlign: 'center', marginTop: '100px' }}>🔐 Menunggu Otorisasi...</div>;
   }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>ID News Scraper - Privat</h1>
-      <hr />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px' }}>
+    <div style={{ padding: '40px', backgroundColor: '#f4f7f6', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <div>
+          <h1 style={{ color: '#2d3436', margin: 0 }}>ID News Scraper - Privat</h1>
+          <p style={{ color: '#636e72' }}>Monitoring Pemilu 2029</p>
+        </div>
+        <button 
+          onClick={fetchNews} 
+          disabled={loading}
+          style={{
+            backgroundColor: '#00b894', color: 'white', border: 'none', padding: '12px 24px',
+            borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
+          }}
+        >
+          <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+          {loading ? 'Memperbarui...' : 'Refresh Data'}
+        </button>
+      </header>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
         {news.map((item) => (
-          <div key={item.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
-            <h3 style={{ fontSize: '16px' }}>{item.title}</h3>
-            <a href={item.url} target="_blank" rel="noreferrer">Baca Berita 🔗</a>
+          <div key={item.id} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <span style={{ fontSize: '11px', backgroundColor: '#dfe6e9', padding: '4px 8px', borderRadius: '4px', color: '#2d3436', fontWeight: 'bold' }}>
+              {item.source}
+            </span>
+            <h3 style={{ margin: '15px 0 10px 0', fontSize: '18px', color: '#2d3436' }}>{item.title}</h3>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <small style={{ color: '#b2bec3' }}>{new Date(item.created_at).toLocaleDateString()}</small>
+              <a href={item.url} target="_blank" rel="noreferrer" style={{ color: '#0984e3', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                Baca <ExternalLink size={14} />
+              </a>
+            </div>
           </div>
         ))}
       </div>
-      {news.length === 0 && <p>Database kosong.</p>}
+
+      {news.length === 0 && !loading && (
+        <div style={{ textAlign: 'center', marginTop: '50px', color: '#b2bec3' }}>
+          <Database size={48} style={{ marginBottom: '10px' }} />
+          <p>Database kosong atau RLS belum disetting.</p>
+        </div>
+      )}
     </div>
   );
 }
