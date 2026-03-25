@@ -29,4 +29,4 @@ jobs:
           GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
           EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
           PYTHONPATH: . 
-        run: python backend/jobs/scheduler_github.py
+        run: python jobs/scheduler_github.py
