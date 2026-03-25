@@ -12,7 +12,7 @@ function App() {
 
     if (passwordInput === 'kopi2029') {
       setIsAuthorized(true);
-      ambilData(); // Baru panggil database kalau password benar
+      ambilData(); 
     } else {
       alert("Password Salah!");
       window.location.reload();
@@ -20,7 +20,7 @@ function App() {
   }, []);
 
   const ambilData = async () => {
-    // 2. Kita panggil Supabase DI DALAM fungsi ini saja supaya tidak bikin blank
+    
     const url = process.env.REACT_APP_SUPABASE_URL;
     const key = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
