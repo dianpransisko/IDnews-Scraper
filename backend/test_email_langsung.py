@@ -8,8 +8,8 @@ def test_kirim():
     print("Sedang mencoba kirim email...")
     try:
         r = resend.Emails.send({
-            "from": "onboarding@resend.dev",
-            "to": "dianpransisko@gmail.com", # Email kamu sendiri
+            "from": "***************",
+            "to": "***********************", # Email kamu sendiri
             "subject": "🚀 TEST BERHASIL!",
             "html": "<strong>Halo Dian!</strong> <p>Jika kamu baca ini, berarti API Resend di Python sudah jalan.</p>"
         })
