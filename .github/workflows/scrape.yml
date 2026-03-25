@@ -19,7 +19,7 @@ jobs:
 
       - name: Install Libraries
         run: |
-          pip install httpx supabase resend python-dotenv
+          pip install httpx supabase resend python-dotenv beautifulsoup4 requests
 
       - name: Execute Scraper & Email
         env:
