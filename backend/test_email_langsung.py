@@ -2,7 +2,7 @@ import resend
 from app.config import settings
 
 # Masukkan API Key kamu langsung untuk tes
-resend.api_key = "re_bkbA8c7a_HhYV7eFnDPoWfC2peYkC2eQR"
+resend.api_key = "******************"
 
 def test_kirim():
     print("Sedang mencoba kirim email...")
